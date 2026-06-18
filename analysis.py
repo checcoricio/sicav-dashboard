@@ -33,9 +33,9 @@ logger = logging.getLogger(__name__)
 # Costanti
 # ---------------------------------------------------------------------------
 TICKER_MAP: dict[str, str] = {
-    "0P0001NCDG.F": "EIS Mercurio 1 I EUR Acc",
-    "0P0001NCDW.F": "EIS Mercurio 2 I EUR Acc",
-    "0P0001NCDY.F": "EIS Mercurio 3 I EUR Acc",
+    "0P0001NCDG.F": "EIS Mercurio 1",
+    "0P0001NCDW.F": "EIS Mercurio 2",
+    "0P0001NCDY.F": "EIS Mercurio 3",
     "0P0001KEAL.F": "EIS Mercurio 4",
     "0P0001OSNN.F": "EIS Mercurio 5",
     "0P0001B56X.F": "Lux International Strategy Metafora I",
