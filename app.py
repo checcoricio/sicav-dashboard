@@ -97,6 +97,28 @@ def fmt_date(val):
         return str(val)
 
 
+def abbreviate_label(name):
+    """Abbrevia 'Lux International Strategy' in 'LIS' per etichette più compatte
+    (legende, tabelle, selettori), senza alterare i nomi originali usati
+    internamente per l'analisi (TICKER_MAP, selezione fondi, export Excel)."""
+    if not isinstance(name, str):
+        return name
+    return name.replace("Lux International Strategy", "LIS")
+
+
+def get_effective_period(df_cumulative: pd.DataFrame):
+    """Restituisce (data_inizio, data_fine) effettive, ricavate dai dati
+    realmente disponibili nel grafico (righe non interamente NaN), così che
+    il periodo mostrato nel grafico sia sempre coerente con quello riportato
+    in tabella, indipendentemente dal range richiesto dall'utente in sidebar."""
+    if df_cumulative is None or df_cumulative.empty:
+        return None, None
+    valid = df_cumulative.dropna(how="all")
+    if valid.empty:
+        return None, None
+    return valid.index.min(), valid.index.max()
+
+
 # ---------------------------------------------------------------------------
 # Sidebar - Parametri
 # ---------------------------------------------------------------------------
@@ -110,6 +132,7 @@ def render_sidebar():
         label="Seleziona i fondi da analizzare",
         options=ALL_FUND_NAMES,
         default=ALL_FUND_NAMES,
+        format_func=abbreviate_label,
         help="Seleziona uno o più fondi. Default: tutti.",
     )
 
@@ -168,14 +191,16 @@ def render_sidebar():
 
 def plot_cumulative(
     df_cumulative: pd.DataFrame,
-    start_date: str | None = None,
-    end_date: str | None = None,
 ) -> plt.Figure:
     """
-    Crea il grafico dell'indice cumulativo con uno stile professionale:
-    palette colori dedicata, etichette dei valori finali, griglia leggera
-    sul solo asse Y, assi senza cornice superiore/destra e legenda
-    posizionata sotto il grafico per non sovrapporsi alle linee.
+    Crea il grafico della performance comparativa con uno stile professionale:
+    palette colori dedicata, etichette dei valori finali in percentuale,
+    griglia leggera sul solo asse Y, assi senza cornice superiore/destra e
+    legenda posizionata sotto il grafico per non sovrapporsi alle linee.
+
+    I valori vengono mostrati come rendimento percentuale rispetto alla base
+    100 (es. indice a 105.3 → +5.3%), e il periodo indicato nel grafico è
+    calcolato sui dati realmente disponibili (coerente con la tabella).
     """
     fig, ax = plt.subplots(figsize=(12, 5.5), dpi=120)
     fig.patch.set_facecolor("white")
@@ -187,37 +212,39 @@ def plot_cumulative(
         series = df_cumulative[col].dropna()
         if series.empty:
             continue
+        pct_series = series - 100.0  # rendimento % rispetto alla base 100
         color = CHART_PALETTE[i % len(CHART_PALETTE)]
         ax.plot(
-            series.index, series.values,
-            label=col, linewidth=2.2, color=color, solid_capstyle="round",
+            pct_series.index, pct_series.values,
+            label=abbreviate_label(col), linewidth=2.2, color=color, solid_capstyle="round",
         )
-        # Pallino + etichetta numerica sull'ultimo valore di ciascuna serie
+        # Pallino + etichetta percentuale sull'ultimo valore di ciascuna serie
         ax.scatter(
-            series.index[-1], series.values[-1],
+            pct_series.index[-1], pct_series.values[-1],
             color=color, s=30, zorder=5, edgecolor="white", linewidth=0.8,
         )
         ax.annotate(
-            f"{series.values[-1]:.1f}",
-            xy=(series.index[-1], series.values[-1]),
+            f"{pct_series.values[-1]:+.1f}%",
+            xy=(pct_series.index[-1], pct_series.values[-1]),
             xytext=(6, 0), textcoords="offset points",
             fontsize=8.5, fontweight="bold", color=color, va="center",
         )
 
-    ax.axhline(100, color="#9CA3AF", linestyle="--", linewidth=1.0, alpha=0.7, zorder=1)
+    ax.axhline(0, color="#9CA3AF", linestyle="--", linewidth=1.0, alpha=0.7, zorder=1)
 
     fig.suptitle(
-        "Performance comparativa — Indice cumulativo (base 100)",
+        "Performance comparativa — Rendimento cumulato (%)",
         fontsize=15, fontweight="bold", color="#111827", x=0.02, y=0.975, ha="left",
     )
-    if start_date and end_date:
+    eff_start, eff_end = get_effective_period(df_cumulative)
+    if eff_start is not None and eff_end is not None:
         fig.text(
-            0.02, 0.91, f"Periodo: {start_date} → {end_date}",
+            0.02, 0.91, f"Periodo: {fmt_date(eff_start)} → {fmt_date(eff_end)}",
             fontsize=9.5, color="#6B7280", ha="left",
         )
 
-    ax.set_ylabel("Indice (base 100)", fontsize=10, color="#374151")
-    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.0f}"))
+    ax.set_ylabel("Rendimento cumulato (%)", fontsize=10, color="#374151")
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:+.0f}%"))
     ax.xaxis.set_major_locator(mdates.AutoDateLocator())
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
 
@@ -248,6 +275,7 @@ def render_summary_table(df_summary: pd.DataFrame):
         return
 
     display = df_summary.copy()
+    display.index = display.index.map(abbreviate_label)
 
     # Formatta colonne
     if "total_return" in display.columns:
@@ -276,14 +304,17 @@ def render_summary_table(df_summary: pd.DataFrame):
 def build_a4_report(
     df_cumulative: pd.DataFrame,
     df_summary: pd.DataFrame,
-    start_date: str,
-    end_date: str,
     comparison_freq: str,
 ) -> bytes:
     """
     Costruisce un'unica immagine PNG (grafico in alto, tabella riepilogativa
     in basso) dimensionata per il formato A4 orizzontale (29,7 x 21,0 cm),
     pronta per la stampa o la condivisione.
+
+    Il grafico mostra il rendimento cumulato in percentuale (non l'indice
+    base 100), con le etichette percentuali sulle singole serie, e il
+    periodo indicato è calcolato sui dati realmente disponibili, in modo
+    coerente con la tabella riepilogativa sottostante.
 
     Returns
     -------
@@ -301,9 +332,11 @@ def build_a4_report(
 
     # --- Intestazione -------------------------------------------------------
     fig.text(0.06, 0.965, "SICAV Fund Comparator — Report", fontsize=18, fontweight="bold", color="#111827")
+    eff_start, eff_end = get_effective_period(df_cumulative)
+    periodo_txt = f"{fmt_date(eff_start)} → {fmt_date(eff_end)}" if eff_start is not None else "N/D"
     fig.text(
         0.06, 0.935,
-        f"Periodo: {start_date} → {end_date}    |    Frequenza: {comparison_freq}    |    "
+        f"Periodo: {periodo_txt}    |    Frequenza: {comparison_freq}    |    "
         f"Generato il: {datetime.date.today().strftime('%d/%m/%Y')}",
         fontsize=10, color="#6B7280",
     )
@@ -316,16 +349,27 @@ def build_a4_report(
         series = df_cumulative[col].dropna()
         if series.empty:
             continue
+        pct_series = series - 100.0  # rendimento % rispetto alla base 100
         color = CHART_PALETTE[i % len(CHART_PALETTE)]
-        ax_chart.plot(series.index, series.values, label=col, linewidth=2.0, color=color)
+        ax_chart.plot(
+            pct_series.index, pct_series.values,
+            label=abbreviate_label(col), linewidth=2.0, color=color,
+        )
         ax_chart.scatter(
-            series.index[-1], series.values[-1],
+            pct_series.index[-1], pct_series.values[-1],
             color=color, s=24, zorder=5, edgecolor="white", linewidth=0.7,
         )
+        ax_chart.annotate(
+            f"{pct_series.values[-1]:+.1f}%",
+            xy=(pct_series.index[-1], pct_series.values[-1]),
+            xytext=(6, 0), textcoords="offset points",
+            fontsize=8, fontweight="bold", color=color, va="center",
+        )
 
-    ax_chart.axhline(100, color="#9CA3AF", linestyle="--", linewidth=0.9, alpha=0.7)
-    ax_chart.set_title("Indice cumulativo (base 100)", fontsize=12, fontweight="bold", color="#111827", loc="left")
-    ax_chart.set_ylabel("Indice (base 100)", fontsize=9.5, color="#374151")
+    ax_chart.axhline(0, color="#9CA3AF", linestyle="--", linewidth=0.9, alpha=0.7)
+    ax_chart.set_title("Rendimento cumulato (%)", fontsize=12, fontweight="bold", color="#111827", loc="left")
+    ax_chart.set_ylabel("Rendimento cumulato (%)", fontsize=9.5, color="#374151")
+    ax_chart.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:+.0f}%"))
     ax_chart.xaxis.set_major_locator(mdates.AutoDateLocator())
     ax_chart.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
     ax_chart.tick_params(labelsize=8.5, colors="#374151")
@@ -348,6 +392,8 @@ def build_a4_report(
     cols_order = [c for c in cols_order if c in table_df.columns]
     table_df = table_df[cols_order]
 
+    if "Fondo" in table_df.columns:
+        table_df["Fondo"] = table_df["Fondo"].apply(abbreviate_label)
     if "total_return" in table_df.columns:
         table_df["total_return"] = table_df["total_return"].apply(fmt_pct)
     for c in ("start_effettiva", "end_effettiva"):
@@ -402,7 +448,7 @@ def main():
     # Titolo
     st.title("📈 SICAV Fund Comparator")
     st.markdown(
-        "Analisi comparativa dei fondi **EIS Mercurio** e **Lux International Strategy Metafora**. "
+        "Analisi comparativa dei fondi **EIS Mercurio** e **LIS Metafora**. "
         "Dati scaricati in tempo reale da Yahoo Finance."
     )
 
@@ -432,7 +478,7 @@ def main():
         col4.metric("Frequenza", comparison_freq)
 
         st.markdown(f"**Max gap days:** {max_gap_days}")
-        st.markdown("**Fondi:** " + ", ".join(selected_funds))
+        st.markdown("**Fondi:** " + ", ".join(abbreviate_label(f) for f in selected_funds))
 
     # ---------------------------------------------------------------------------
     # Esecuzione analisi
@@ -476,12 +522,12 @@ def main():
     # ---------------------------------------------------------------------------
     # 2. Grafico cumulativo
     # ---------------------------------------------------------------------------
-    st.subheader("📈 Indice cumulativo (base 100)")
+    st.subheader("📈 Rendimento cumulato (%)")
 
     if df_cumulative.empty or df_cumulative.dropna(how="all").empty:
         st.warning("⚠️ Dati cumulativi non disponibili per il tracciamento del grafico.")
     else:
-        fig = plot_cumulative(df_cumulative, start_date=str(start_date), end_date=str(end_date))
+        fig = plot_cumulative(df_cumulative)
         st.pyplot(fig)
         plt.close(fig)
 
@@ -491,13 +537,13 @@ def main():
     with st.expander("🔍 Dati dettagliati", expanded=False):
         st.markdown("#### Indice cumulativo (valori numerici)")
         st.dataframe(
-            df_cumulative.style.format("{:.2f}", na_rep="N/D"),
+            df_cumulative.rename(columns=abbreviate_label).style.format("{:.2f}", na_rep="N/D"),
             use_container_width=True,
         )
 
         st.markdown("#### NAV allineati alle evaluation dates")
         st.dataframe(
-            df_aligned_nav.style.format("{:.4f}", na_rep="N/D"),
+            df_aligned_nav.rename(columns=abbreviate_label).style.format("{:.4f}", na_rep="N/D"),
             use_container_width=True,
         )
 
@@ -528,8 +574,7 @@ def main():
         else:
             try:
                 report_png = build_a4_report(
-                    df_cumulative, df_summary,
-                    str(start_date), str(end_date), comparison_freq,
+                    df_cumulative, df_summary, comparison_freq,
                 )
                 st.download_button(
                     label="🖼️ Scarica report (grafico + tabella) — A4 orizzontale",
