@@ -55,9 +55,11 @@ logger = logging.getLogger(__name__)
 ALL_FUND_NAMES = list(TICKER_MAP.values())
 
 FREQ_OPTIONS = {
+    "W-FRI — Settimanale (venerdì)": "W-FRI",
     "W-MON — Settimanale (lunedì)": "W-MON",
     "D — Giornaliero (business day)": "D",
-    }
+    "ME — Fine mese": "ME",
+}
 
 # Palette colori professionale, leggibile anche per daltonici, usata nei grafici
 CHART_PALETTE = [
@@ -72,7 +74,7 @@ CHART_PALETTE = [
 ]
 
 # Date di default ragionevoli (modificabili dall'utente)
-EFAULT_START = datetime.date(2020, 1, 1)
+DEFAULT_START = datetime.date(2020, 1, 1)
 DEFAULT_END = datetime.date.today()
 
 
