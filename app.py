@@ -55,11 +55,9 @@ logger = logging.getLogger(__name__)
 ALL_FUND_NAMES = list(TICKER_MAP.values())
 
 FREQ_OPTIONS = {
-    "W-FRI — Settimanale (venerdì)": "W-FRI",
     "W-MON — Settimanale (lunedì)": "W-MON",
     "D — Giornaliero (business day)": "D",
-    "ME — Fine mese": "ME",
-}
+    }
 
 # Palette colori professionale, leggibile anche per daltonici, usata nei grafici
 CHART_PALETTE = [
