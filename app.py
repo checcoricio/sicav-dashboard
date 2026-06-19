@@ -72,8 +72,9 @@ CHART_PALETTE = [
 ]
 
 # Date di default ragionevoli (modificabili dall'utente)
-DEFAULT_START.strftime(01,01,2020)
-DEFAULT_END.strftime.date.today()
+EFAULT_START = datetime.date(2020, 1, 1)
+DEFAULT_END = datetime.date.today()
+
 
 
 
