@@ -75,7 +75,11 @@ CHART_PALETTE = [
 EFAULT_START = datetime.date(2020, 1, 1)
 DEFAULT_END = datetime.date.today()
 
-
+start_date, end_date = st.date_input(
+    "Seleziona intervallo date",
+    value=(DEFAULT_START, DEFAULT_END),
+    format="DD/MM/YYYY"   # 👈 questo è quello che ti serv
+)
 
 
 # ---------------------------------------------------------------------------
