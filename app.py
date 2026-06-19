@@ -72,8 +72,8 @@ CHART_PALETTE = [
 ]
 
 # Date di default ragionevoli (modificabili dall'utente)
-start_str = DEFAULT_START.strftime("%d.%m.%Y")
-end_str = DEFAULT_END.strftime("%d.%m.%Y")
+DEFAULT_START.strftime("%d.%m.%Y")
+DEFAULT_END.strftime("%d.%m.%Y")
 
 
 
