@@ -33,13 +33,13 @@ logger = logging.getLogger(__name__)
 # Costanti
 # ---------------------------------------------------------------------------
 TICKER_MAP: dict[str, str] = {
-    "0P0001NCDG.F": "EIS Mercurio 1",
-    "0P0001NCDW.F": "EIS Mercurio 2",
-    "0P0001NCDY.F": "EIS Mercurio 3",
-    "0P0001KEAL.F": "EIS Mercurio 4",
-    "0P0001OSNN.F": "EIS Mercurio 5",
-    "0P0001B56X.F": "Lux International Strategy Metafora I",
-    "0P0001B56Y.F": "Lux International Strategy Metafora II",
+    "0P0001NCDG.F": "Eurizon (Intesa)",
+    "0P0001NCDW.F": "Goldman Sachs",
+    "0P0001NCDY.F": "Citibank",
+    "0P0001KEAL.F": "UniCredit",
+    "0P0001OSNN.F": "Cesare Ponti (BPER)",
+    "0P0001B56X.F": "Indosuez",
+    "0P0001B56Y.F": "JPM",
 }
 
 REVERSE_TICKER_MAP: dict[str, str] = {v: k for k, v in TICKER_MAP.items()}
