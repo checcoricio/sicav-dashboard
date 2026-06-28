@@ -350,7 +350,7 @@ def render_summary_table(df_summary: pd.DataFrame, fund_sizes: dict | None = Non
         with col_s1:
             st.metric(
                 "💼 Totale AUM fondi analizzati (Mln €)",
-                f"{total_size_mln:,.1f}" if total_size_mln else "N/D",
+                f"{round(total_size_mln):,}".replace(",", ".") if total_size_mln else "N/D",
                 help="Somma degli Attivi Netti di tutti i fondi con dati disponibili."
             )
         with col_s2:
