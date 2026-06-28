@@ -501,7 +501,7 @@ def _build_full_a4_figure(
         bbox=[0.08, 0.05, 0.84, 0.85],
     )
     tbl.auto_set_font_size(False)
-    tbl.set_fontsize(8.5)
+    tbl.set_fontsize(6.5)
 
     n_data_rows = len(table_df) - (2 if extra_rows else 0)
     for (row, _col_idx), cell in tbl.get_celld().items():
