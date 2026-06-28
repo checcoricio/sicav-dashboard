@@ -519,8 +519,8 @@ def _build_full_a4_figure(
             cell.set_facecolor("#F9FAFB" if row % 2 == 0 else "white")
 
         fig.text(
-            0.07, 0.015,
-            "L'AUM corrisponde al 50% del patrimonio liquido di RED",
+            0.08, 0.015,
+            "L'AUM corrisponde a circa il 50% del patrimonio liquido di RED",
             fontsize=7, color="#9CA3AF",
             fontstyle="italic",
             fontfamily="DejaVu Sans",
