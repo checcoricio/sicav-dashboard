@@ -89,7 +89,7 @@ def fetch_fund_sizes(
     return sizes
 
 
-def fmt_fund_size(value: float | None) -> str:
+def fmt_fund_size(value):
     """
     Formatta il valore degli attivi netti come numero arrotondato in Mln €.
     L'unità (Mln €) viene mostrata solo nell'intestazione di colonna, non qui.
@@ -100,8 +100,8 @@ def fmt_fund_size(value: float | None) -> str:
     if value is None or (isinstance(value, float) and pd.isna(value)):
         return "N/D"
     try:
-        v = float(value) / 1_000_000  # converti sempre in Mln
-        return f"{v:,.1f}"
+        v = round(float(value) / 1_000_000)   # arrotonda all'intero più vicino
+        return str(v)                           # nessun separatore, nessun decimale
     except Exception:
         return "N/D"
 
