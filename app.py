@@ -477,7 +477,7 @@ def _build_full_a4_figure(
     if fund_sizes:
         valid_sizes = {k: v for k, v in fund_sizes.items() if v is not None}
         total_size = sum(valid_sizes.values()) if valid_sizes else None
-        total_size_fmt = f"{total_size / 1_000_000:,.1f}" if total_size else "N/D"
+        total_size_fmt = f"{round(total_size / 1_000_000):,}".replace(",", ".") if total_size else "N/D"
 
         df_for_wp = df_summary.copy()
         df_for_wp["size_fondo"] = df_for_wp.index.map(lambda f: fund_sizes.get(f))
