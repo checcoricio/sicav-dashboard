@@ -522,6 +522,8 @@ def _build_full_a4_figure(
             0.06, 0.015,
             "L'AUM corrisponde al 50% del patrimonio liquido di RED",
             fontsize=7, color="#9CA3AF",
+            fontweight="light",
+            fontstyle="italic",
 )
 
     return fig
