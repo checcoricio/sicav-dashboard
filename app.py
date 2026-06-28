@@ -524,7 +524,7 @@ def _build_full_a4_figure(
             fontsize=7, color="#9CA3AF",
             fontstyle="italic",
             fontfamily="DejaVu Sans",
-            transform=fig.transFigure,
+            rasterized=True,
 )
 
     return fig
