@@ -389,7 +389,7 @@ def _build_full_a4_figure(
     )
 
     # --- Intestazione -------------------------------------------------------
-    fig.text(0.06, 0.965, "SICAV Fund Comparator — Report", fontsize=16, fontweight="bold", color="#111827")
+    fig.text(0.06, 0.95, "SICAV Fund Comparator — Report", fontsize=16, fontweight="bold", color="#111827")
     eff_start, eff_end = get_effective_period(df_cumulative)
     periodo_txt = f"{fmt_date(eff_start)} → {fmt_date(eff_end)}" if eff_start is not None else "N/D"
     fig.text(
