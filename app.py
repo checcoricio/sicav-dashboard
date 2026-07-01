@@ -393,7 +393,7 @@ def _build_full_a4_figure(
     eff_start, eff_end = get_effective_period(df_cumulative)
     periodo_txt = f"{fmt_date(eff_start)} → {fmt_date(eff_end)}" if eff_start is not None else "N/D"
     fig.text(
-        0.06, 0.935,
+        0.06, 0.92,
         f"Periodo: {periodo_txt}    |    Frequenza: {comparison_freq}    |    "
         f"Generato il: {datetime.date.today().strftime('%d/%m/%Y')}",
         fontsize=8, color="#6B7280",
